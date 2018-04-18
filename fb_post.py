@@ -4,9 +4,11 @@ import json
 import requests
 import time
 import csv
+import datetime
 
 
-access_token="EAACEdEose0cBAG1HrmC1VQWkXxKwwsZCpLFAhHfLR2i9jW8B1CMt2lkbLg4HigkX8gu1OoQg9L8BbmFiupljLcZB1ZB4xzzG4PjWj6zHvTGALqaU71kiD3ZA8PBKuGZCxCeLi3XwyYDuh6gPooHibeysoaajXESWZARzjMRj7aL5oXP4y34oP3r5DayYhmMfkZD"
+access_token="EAACEdEose0cBAMjqxovNoPOokjw5lG1W54jTZBZCAGWksmD3f3OsoMgU3Y8nA22I4WWPOIXZCSu0vC3HNdHoZATZBJ7GSLwmQCauRZAvP6WrfaPlmWup3AZBPeM1PoFIrafO0NoO6FLZA3ZCSJ8nyt9i7JEDKXFGcSXJpysJ2rkPhQBgPLtLWQJ8pEU0pOoARCtoDVGucn2bckAZDZD"
+
 
 def getCurlData02(url):
     end = False
@@ -23,9 +25,16 @@ def getCurlData02(url):
 def getFBData(page_id,access_token,edge):
     url1 = "https://graph.facebook.com/v2.11/"
     url2 = "%s/%s"%(page_id,edge)
-    url3 = "/?access_token=%s"%(access_token)
+    url3 = "&access_token=%s"%(access_token)
     
-    url = url1+url2+url3
+    #adding datelimit
+    tt = datetime.timedelta(6*365/12)
+    dd = datetime.datetime.now()
+    back_date = (dd-tt).strftime("%Y-%m-%d")
+    cur_date = dd.strftime("%Y-%m-%d")
+    url4 = "/?since=%s&until=%s"%(back_date,cur_date)
+    
+    url = url1+url2+url4+url3
     
     data = getCurlData02(url)
     return data.get('data')
