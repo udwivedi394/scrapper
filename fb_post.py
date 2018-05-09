@@ -3,10 +3,13 @@
 import requests
 import csv
 import datetime
+import time
+
+access_token = "EAACEdEose0cBAPX3Di0h9VLcJVnzgP4JZBzJ1Jy7Bnoglb71ZACIOCm0pxYoqZCBcAw2YbDOg5Dy1s3ZBu2v3jA6fM24VYQbQlZC1r6l43iNHAHecZAv6BngbOoaJHw0yHCrCvar9l3zd8wDzWT63IBjXOZBVPmc8apxg1IijLtxVTF4Fcoq7mG0pTWwMNlrP43sFp2G6J1Y9tJ28YzXsXFeoHIAkvpfpjLjA06cLIu6AZDZD"
 
 number_of_feeds = 0
 
-def getCurlData02(url):
+def get_curl_data02(url):
     end = False
     while end==False:
         try:
@@ -18,7 +21,7 @@ def getCurlData02(url):
             print("Retrying...")
     return response.json()
 
-def getFBData(page_id,access_token,edge,lim_num):
+def get_fb_data(page_id,access_token,edge,lim_num):
     url1 = "https://graph.facebook.com/v2.11/"
     url2 = "%s/%s"%(page_id,edge)
     url4 = "&limit=%d"%(lim_num)
@@ -33,29 +36,29 @@ def getFBData(page_id,access_token,edge,lim_num):
     
     url = url1+url2+url3+url4+url5
     
-    data = getCurlData02(url)
+    data = get_curl_data02(url)
     return data
 
 #Parameters->(Page ID, access Token, Type of page like 'post''comment' etc, max limit of 1 chunk, parent ID of current
 #request, csv file object
-def processFeedData(page_id,access_token,type_t,num_limit,parent,csvf): 
+def process_feed_data(page_id,access_token,type_t,num_limit,parent,csvf): 
     next_page_available = True
 
-    posts = getFBData(page_id,access_token,type_t,num_limit)
+    posts = get_fb_data(page_id,access_token,type_t,num_limit)
     while next_page_available: 
-        writecsvData(posts.get('data'),csvf,access_token,parent)       
+        write_csv_data(posts.get('data'),csvf,access_token,parent)       
  
         if 'paging' in posts.keys():
             #print('Type %s: '%(type_t))
             #print(posts['paging'])
             if posts.get('paging').get('next'):
-                posts = getCurlData02(posts['paging']['next'])
+                posts = get_curl_data02(posts['paging']['next'])
             else:
                 next_page_available=False 
         else:
             next_page_available=False
 
-def writecsvData(posts,csvf,access_token,parent=None):
+def write_csv_data(posts,csvf,access_token,parent=None):
     try:
         global number_of_feeds
        
@@ -70,7 +73,7 @@ def writecsvData(posts,csvf,access_token,parent=None):
 
             if parent==None: 
                 csvf.writerow([feed['id'],'None',feed['created_time'],feed['message']])
-                processFeedData(feed['id'],access_token,'comments',100,feed['id'],csvf)
+                process_feed_data(feed['id'],access_token,'comments',100,feed['id'],csvf)
             else:
                 csvf.writerow([feed['id'],parent,feed['created_time'],feed['message']])
                
@@ -79,15 +82,20 @@ def writecsvData(posts,csvf,access_token,parent=None):
     
 if __name__=="__main__":
     page_id = input("Enter the page.id: ")
-    access_token = input("Enter the access ID: ")
+    #access_token = input("Enter the access ID: ")
     
     csvfile = open('%s_fb_post_data.csv' % page_id, 'w', newline='')
     csvf = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     csvf.writerow(["id","parent_id","created_time","message"])
      
-    processFeedData(page_id,access_token,'posts',100,None,csvf)
+     
+    start = datetime.datetime.now()
+    process_feed_data(page_id,access_token,'posts',100,None,csvf)
     
     csvfile.close()
+    end = datetime.datetime.now()
+    
 
     print("Done")
     print("Total %d feeds processed"%(number_of_feeds))
+    print("Total time taken(seconds):",(end-start).seconds)
